@@ -1,0 +1,771 @@
+{
+  "name": "My_Checkout_Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9ec74cb9-074c-4680-9681-49da5005bce7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_STATE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "STATE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "00b4918c-e675-4372-81f1-207db15c59b6",
+      "name": "Read_State"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_BASELINE_METRIX_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "BASELINE_METRIX "
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "3304c3dc-14ad-47d2-a791-1debbcef76f0",
+      "name": "Read_Baseline"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_CART_EVENTS_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "CART_EVENTS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        0
+      ],
+      "id": "e5110e0c-d3e9-4051-95bf-b5fd2dc87581",
+      "name": "Read_Cartevents",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "88bb8bb8-8f0e-4af5-9c01-7e1fa531439b",
+              "leftValue": "={{ $json.timestamp }}",
+              "rightValue": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "c9143e1d-872e-4b92-84f1-d2e84af58705",
+              "leftValue": "={{ $json.checkout_step }}",
+              "rightValue": "^(PAYMENT|ADDRESS|SHIPPING)$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "09c7b2d8-6c07-45a4-aacc-cfe76fdc9ed7",
+              "leftValue": "={{ Number($json.cart_value) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "7408f8b5-dbd3-433f-88ad-a3c0fe69e554",
+              "leftValue": "={{ $json.device }}",
+              "rightValue": "^(MOBILE|DESKTOP)$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        896,
+        0
+      ],
+      "id": "906086f3-c6ae-436c-86ca-8048a2956faa",
+      "name": "Validate_input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "f3c41ab5-7fee-4f59-9551-9673f9fe9076",
+              "leftValue": "={{ new Date($json.timestamp).getTime() }}",
+              "rightValue": "={{ new Date($('Read_State').first().json.value).getTime() }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "e4ec34c6-3248-42db-ba6f-da0196bd0b48",
+      "name": "Filter_New"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "9fb1fdc3-f796-4850-9bc4-e158b8ddb187",
+              "leftValue": "={{ $json.checkout_step }}",
+              "rightValue": "PAYMENT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "298a4f64-90b9-47ac-8339-9f4e84bb58d2",
+              "leftValue": "={{ Number($json.cart_value) }}",
+              "rightValue": 2000,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "8919c84d-dfcb-4dc6-b3db-d89ee612df47",
+              "leftValue": "={{ $json.device === 'MOBILE' ? $('Filter_New').all().filter(i => i.json.device === 'MOBILE').length : 0 }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "6657dfc1-c87e-41c2-b615-e95223720324",
+              "leftValue": "={{ $('Read_Baseline').all().some(b => b.json.checkout_step === $json.checkout_step) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "deae4d95-7be4-47a9-9040-0fdacc620b4c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"command_id\": \"CMD_{{ $now.toFormat('yyyyMMdd_HHmmss') }}_A{{ $itemIndex }}\",\n  \"action\": \"ALERT\",\n  \"severity\": \"HIGH\",\n  \"reason\": \"{{ $json.checkout_step === 'PAYMENT' ? 'Payment failure' : (Number($json.cart_value) >= 2000 ? 'High cart value' : ($('Read_Baseline').all().some(b => b.json.checkout_step === $json.checkout_step) ? 'Multiple mobile failures' : 'Baseline unknown - fail safe')) }}\",\n  \"checkout_step\": \"{{ $json.checkout_step }}\",\n  \"cart_value\": {{ Number($json.cart_value) }},\n  \"device\": \"{{ $json.device }}\",\n  \"baseline_rate\": \"{{ $('Read_Baseline').all().find(b => b.json.checkout_step === $json.checkout_step)?.json.baseline_rate ?? 'unknown' }}\",\n  \"timestamp\": \"{{ $json.timestamp }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        -192
+      ],
+      "id": "d34c338b-20f9-4b1a-aa29-36a002e9a2cc",
+      "name": "SET_ALERT"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"command_id\": \"CMD_{{ $now.toFormat('yyyyMMdd_HHmmss') }}_L{{ $itemIndex }}\",\n  \"action\": \"LOG\",\n  \"severity\": \"LOW\",\n  \"reason\": \"Low value isolated failure\",\n  \"checkout_step\": \"{{ $json.checkout_step }}\",\n  \"cart_value\": {{ Number($json.cart_value) }},\n  \"device\": \"{{ $json.device }}\",\n  \"baseline_rate\": \"{{ $('Read_Baseline').all().find(b => b.json.checkout_step === $json.checkout_step)?.json.baseline_rate ?? 'unknown' }}\",\n  \"timestamp\": \"{{ $json.timestamp }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        0
+      ],
+      "id": "ea341225-aa12-4c4d-aaa8-0b3595fdd369",
+      "name": "Set_LOG"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_AGENT_COMMANDS_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AGENT_COMMANDS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "command_id",
+              "displayName": "command_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "checkout_step",
+              "displayName": "checkout_step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cart_value",
+              "displayName": "cart_value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "device",
+              "displayName": "device",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "baseline_rate",
+              "displayName": "baseline_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        -192
+      ],
+      "id": "c3d72354-cfa8-4bdc-919a-5f7abec70505",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_AGENT_COMMANDS_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AGENT_COMMANDS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "command_id",
+              "displayName": "command_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "checkout_step",
+              "displayName": "checkout_step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cart_value",
+              "displayName": "cart_value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "device",
+              "displayName": "device",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "baseline_rate",
+              "displayName": "baseline_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        0
+      ],
+      "id": "f689228b-19d8-4694-80c6-a4ca2d306c60",
+      "name": "Append row in sheet1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://webhook.site/YOUR-ID",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ command_id: $json.command_id, action: $json.action, severity: $json.severity, reason: $json.reason, checkout_step: $json.checkout_step, cart_value: $json.cart_value, device: $json.device, baseline_rate: $json.baseline_rate, timestamp: $json.timestamp }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        -192
+      ],
+      "id": "ea1c3707-2500-4f73-9b65-5bad15500eb0",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://webhook.site/YOUR-ID",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ command_id: $json.command_id, action: $json.action, severity: $json.severity, reason: $json.reason, checkout_step: $json.checkout_step, cart_value: $json.cart_value, device: $json.device, baseline_rate: $json.baseline_rate, timestamp: $json.timestamp }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        0
+      ],
+      "id": "3b2c8bbf-649e-4f00-9da9-000aa88f1118",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_STATE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "STATE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "key": "last_processed_timestamp",
+            "value": "={{ $('Filter_New').all().map(i => i.json.timestamp).sort().pop() }}"
+          },
+          "matchingColumns": [
+            "key"
+          ],
+          "schema": [
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2240,
+        -192
+      ],
+      "id": "a4bc9ea3-e093-439d-a6c4-18589e5159a5",
+      "name": "Update row in sheet",
+      "executeOnce": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read_State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read_State": {
+      "main": [
+        [
+          {
+            "node": "Read_Baseline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read_Baseline": {
+      "main": [
+        [
+          {
+            "node": "Read_Cartevents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read_Cartevents": {
+      "main": [
+        [
+          {
+            "node": "Validate_input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate_input": {
+      "main": [
+        [
+          {
+            "node": "Filter_New",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter_New": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "SET_ALERT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set_LOG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET_ALERT": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_LOG": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
