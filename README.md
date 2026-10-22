@@ -23,7 +23,7 @@ The agent must:
 ## Architecture
 
 ```mermaid
-flowchart LR
+   flowchart TD
     T[Trigger] --> RS[Read State]
     RS --> RB[Read Baseline]
     RB --> RE[Read Cart Events]
